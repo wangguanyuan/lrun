@@ -40,6 +40,7 @@
 #include "utils/linux_only.h"
 #include "utils/for_each.h"
 #include "utils/fs.h"
+#include "utils/netns.h"
 #include "utils/strconv.h"
 
 
@@ -1143,6 +1144,38 @@ pid_t Cgroup::spawn(spawn_arg& arg) {
         // remove CLONE_NEWPID flag because setns() will affect all new processes
         clone_flags ^= CLONE_NEWPID;
     } // spawn init process
+
+    // switch to existed netns for better performance if needed
+    if ((clone_flags & CLONE_NEWNET) == CLONE_NEWNET && arg.reuse_netns) {
+        INFO("try to reuse network namespace");
+        int netns_fd = open(netns::LRUN_NETNS_PATH, O_RDONLY);
+        if (netns_fd < 0) {
+            // create reusable net ns
+            INFO("create reusable network namespace")
+            int result = system(netns::LRUN_NETNS_CMD);
+            if (result != 0) {
+                ERROR("can not create network namespace");
+                return -3;
+            } else {
+                netns_fd = open(netns::LRUN_NETNS_PATH, O_RDONLY);
+                if (netns_fd < 0) {
+                    ERROR("can not open reusable network namespace");
+                    return -3;
+                }
+            }
+        }
+
+        INFO("set network ns to %s", netns::LRUN_NETNS_PATH);
+        // older glibc does not have setns
+        if (syscall(SYS_setns, netns_fd, CLONE_NEWNET)) {
+            ERROR("can not set network namespace");
+            return -3;
+        };
+        close(netns_fd);
+
+        clone_flags ^= CLONE_NEWNET;
+    }
+
 
     DEBUG_DO {
         INFO("clone flags = 0x%x = %s", (int)clone_flags, clone_flags_to_str(clone_flags).c_str());

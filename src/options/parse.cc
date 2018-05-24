@@ -118,6 +118,9 @@ void lrun::options::parse(int argc, char * argv[], lrun::MainConfig& config) {
         } else if (option == "pass-exitcode") {
             REQUIRE_NARGV(1);
             config.pass_exitcode = NEXT_BOOL_ARG;
+        } else if (option == "reuse-netns") {
+            REQUIRE_NARGV(1);
+            config.arg.reuse_netns = NEXT_BOOL_ARG;
         } else if (option == "chroot") {
             REQUIRE_NARGV(1);
             config.arg.chroot_path = NEXT_STRING_ARG;
