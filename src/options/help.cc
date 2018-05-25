@@ -98,6 +98,7 @@ static string help_content(int width) {
         "  --pass-exitcode   bool        Discard lrun exit code, pass child process's exit code\n"
         "  --chroot          path        Chroot to specified `path` before exec\n"
         "  --umount-outside  bool        Umount everything outside the chroot path. This is not necessary but can help to hide mount information. Note: umount is SLOW\n"
+        "  --reuse-netns     bool        Create named network namespace and reuse\n"
         "  --chdir           path        Chdir to specified `path` after chroot\n"
         "  --nice            value       Add nice with specified `value`. Only root can use a negative value\n"
         "  --umask           int         Set umask\n"
